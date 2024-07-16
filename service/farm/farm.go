@@ -59,7 +59,7 @@ func (fs FarmService) InsertFarm(ctx context.Context, data farm.InsertFarm) (map
 
 	tx, err := fs.dbConn.Backend.Read.Begin()
 	if err != nil {
-		fs.log.WithField("request", utils.StructToString(tx)).WithError(err).Errorf("Sign Up | Low | fail to begin transaction")
+		fs.log.WithField("request", utils.StructToString(tx)).WithError(err).Errorf("failed to start Tx")
 		tx.Rollback()
 		return map[string]string{
 			"en": "failed to begin Tx",
@@ -67,18 +67,18 @@ func (fs FarmService) InsertFarm(ctx context.Context, data farm.InsertFarm) (map
 		}, err
 	}
 
-	isExists, err := fs.db.Farm.IsFarmExists(ctx, data.FarmName)
+	isExists, err := fs.db.Farm.IsFarmExists(ctx, data.FarmName, 0)
 	if err != nil {
-		fs.log.WithField("request", utils.StructToString(tx)).WithError(err).Errorf("Sign Up | Low | fail to begin transaction")
+		fs.log.WithField("request", utils.StructToString(tx)).WithError(err).Errorf("failed to check farm")
 		tx.Rollback()
 		return map[string]string{
-			"en": "farm name already exists",
-			"id": "nama farm sudah ada",
-		}, errors.New("farm name already exists")
+			"en": "failed to check farm",
+			"id": "gagal untuk cek farm",
+		}, err
 	}
 
 	if isExists {
-		fs.log.WithField("request", utils.StructToString(tx)).WithError(err).Errorf("Sign Up | Low | fail to begin transaction")
+		fs.log.WithField("request", utils.StructToString(tx)).WithError(err).Errorf("farm name already exists")
 		tx.Rollback()
 		return map[string]string{
 			"en": "farm name already exists",
@@ -95,7 +95,7 @@ func (fs FarmService) InsertFarm(ctx context.Context, data farm.InsertFarm) (map
 
 	err = fs.db.Farm.InsertFarm(ctx, tx, req)
 	if err != nil {
-		fs.log.WithField("request", utils.StructToString(tx)).WithError(err).Errorf("Sign Up | Low | fail to begin transaction")
+		fs.log.WithField("request", utils.StructToString(tx)).WithError(err).Errorf("failed to insert farm")
 		tx.Rollback()
 		return map[string]string{
 			"en": "failed to insert farm",
@@ -105,7 +105,7 @@ func (fs FarmService) InsertFarm(ctx context.Context, data farm.InsertFarm) (map
 
 	err = tx.Commit()
 	if err != nil {
-		fs.log.WithField("request", utils.StructToString(tx)).WithError(err).Errorf("Sign Up | Low | fail to begin transaction")
+		fs.log.WithField("request", utils.StructToString(tx)).WithError(err).Errorf("failed commit")
 		tx.Rollback()
 		return map[string]string{
 			"en": "failed commit",

@@ -23,7 +23,7 @@ func newFarm(db *infra.DatabaseList, logger *logrus.Logger) FarmConfig {
 
 type Farm interface {
 	InsertFarm(ctx context.Context, tx *sql.Tx, data farm.InsertFarm) error
-	IsFarmExists(ctx context.Context, farmName string) (bool, error)
+	IsFarmExists(ctx context.Context, farmName string, ID int) (bool, error)
 	GetFarms(ctx context.Context) ([]farm.Farms, error)
 }
 
@@ -31,7 +31,7 @@ func (fc FarmConfig) GetFarms(ctx context.Context) ([]farm.Farms, error) {
 
 	var res []farm.Farms
 
-	script := `select f.id, f.farm_name, f.created_at from farm f`
+	script := `select f.id, f.farm_name, f.created_at from farm f where f.is_deleted = false`
 
 	query, args, err := fc.db.Backend.Read.In(script)
 	if err != nil {
@@ -46,21 +46,37 @@ func (fc FarmConfig) GetFarms(ctx context.Context) ([]farm.Farms, error) {
 	return res, nil
 }
 
-func (fc FarmConfig) IsFarmExists(ctx context.Context, farmName string) (bool, error) {
+func (fc FarmConfig) IsFarmExists(ctx context.Context, farmName string, ID int) (bool, error) {
 	var isExist bool
 
-	script := `select exists(select * from farm where farm_name = $1)`
+	if farmName != "" {
+		script := `select exists(select * from farm where farm_name = $1)`
 
-	query, args, err := fc.db.Backend.Read.In(script, farmName)
-	if err != nil {
-		return isExist, err
+		query, args, err := fc.db.Backend.Read.In(script, farmName)
+		if err != nil {
+			return isExist, err
+		}
+
+		query = fc.db.Backend.Read.Rebind(query)
+		err = fc.db.Backend.Read.GetContext(ctx, &isExist, query, args...)
+		if err != nil && err != sql.ErrNoRows {
+			return isExist, err
+		}
+	} else if ID != 0 {
+		script := `select exists(select * from farm where id = $1)`
+
+		query, args, err := fc.db.Backend.Read.In(script, ID)
+		if err != nil {
+			return isExist, err
+		}
+
+		query = fc.db.Backend.Read.Rebind(query)
+		err = fc.db.Backend.Read.GetContext(ctx, &isExist, query, args...)
+		if err != nil && err != sql.ErrNoRows {
+			return isExist, err
+		}
 	}
 
-	query = fc.db.Backend.Read.Rebind(query)
-	err = fc.db.Backend.Read.GetContext(ctx, &isExist, query, args...)
-	if err != nil && err != sql.ErrNoRows {
-		return isExist, err
-	}
 	return isExist, nil
 }
 

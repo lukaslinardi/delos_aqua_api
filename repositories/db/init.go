@@ -7,10 +7,12 @@ import (
 
 type Database struct {
 	Farm Farm
+	Pond Pond
 }
 
 func NewDatabase(db *infra.DatabaseList, logger *logrus.Logger) Database {
 	return Database{
 		Farm: newFarm(db, logger),
+		Pond: newPond(db, logger),
 	}
 }

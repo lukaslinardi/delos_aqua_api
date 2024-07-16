@@ -1,40 +1,44 @@
-package farmHandler
+package pondHandler
+
 
 import (
+
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 
 	cg "github.com/lukaslinardi/delos_aqua_api/domain/constants/general"
-	fm "github.com/lukaslinardi/delos_aqua_api/domain/model/farm"
+	pd "github.com/lukaslinardi/delos_aqua_api/domain/model/pond"
 
 	"github.com/lukaslinardi/delos_aqua_api/domain/model/general"
 	"github.com/lukaslinardi/delos_aqua_api/domain/utils"
 	"github.com/sirupsen/logrus"
 
-	farmService "github.com/lukaslinardi/delos_aqua_api/service/farm"
+	pondService "github.com/lukaslinardi/delos_aqua_api/service/pond"
 )
 
-type FarmHandler struct {
-	Farm farmService.Farm
+
+type PondHandler struct {
+	Pond pondService.Pond
 	conf general.AppService
 	log  *logrus.Logger
 }
 
-func NewFarmHandler(farm farmService.Farm, conf general.AppService, logger *logrus.Logger) FarmHandler {
-	return FarmHandler{
-		Farm: farm,
+func NewPondHandler(pond pondService.Pond, conf general.AppService, logger *logrus.Logger) PondHandler {
+	return PondHandler{
+		Pond: pond,
 		conf: conf,
 		log:  logger,
 	}
 }
 
-func (fh FarmHandler) GetFarms(res http.ResponseWriter, req *http.Request) {
+
+func (ph PondHandler) GetPonds(res http.ResponseWriter, req *http.Request) {
 	respData := &utils.ResponseDataV3{
 		Status: cg.Fail,
 	}
 
-	data, message, err := fh.Farm.GetFarms(req.Context())
+	data, message, err := ph.Pond.GetPonds(req.Context())
 	if err != nil {
 		respData.Message = message
 		respData.ErrorDebug = err.Error()
@@ -42,6 +46,7 @@ func (fh FarmHandler) GetFarms(res http.ResponseWriter, req *http.Request) {
 		utils.WriteResponse(res, respData, http.StatusInternalServerError)
 		return
 	}
+
 
 	if len(data) == 0 {
 		respData = &utils.ResponseDataV3{
@@ -66,12 +71,13 @@ func (fh FarmHandler) GetFarms(res http.ResponseWriter, req *http.Request) {
 
 }
 
-func (fh FarmHandler) InsertFarm(res http.ResponseWriter, req *http.Request) {
+
+func (ph PondHandler) InsertPond(res http.ResponseWriter, req *http.Request) {
 	respData := &utils.ResponseDataV3{
 		Status: cg.Fail,
 	}
 
-	var request fm.InsertFarm
+	var request pd.InsertPond
 
 	reqBody, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -95,7 +101,7 @@ func (fh FarmHandler) InsertFarm(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	messages, err := fh.Farm.InsertFarm(req.Context(), request)
+	messages, err := ph.Pond.InsertPond(req.Context(), request)
 	if err != nil {
 		respData.Message = messages
 		respData.ErrorDebug = err.Error()
