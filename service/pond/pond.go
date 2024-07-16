@@ -84,7 +84,7 @@ func (ps PondService) InsertPond(ctx context.Context, data pond.InsertPond) (map
 		return map[string]string{
 			"en": "farm not exists",
 			"id": "farm tidak exists",
-		}, errors.New("farm already exists")
+		}, errors.New("farm not exists")
 	}
 
 	isPondExists, err := ps.db.Pond.IsPondExists(ctx, data.PondName, 0)

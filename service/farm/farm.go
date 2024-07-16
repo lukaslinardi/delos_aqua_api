@@ -32,6 +32,45 @@ func newFarmService(db db.Database, conf general.AppService, dbConn *infra.Datab
 type Farm interface {
 	InsertFarm(ctx context.Context, data farm.InsertFarm) (map[string]string, error)
 	GetFarms(ctx context.Context) ([]farm.Farms, map[string]string, error)
+	DeleteFarm(ctx context.Context, ID int) (map[string]string, error)
+}
+
+func (fs FarmService) DeleteFarm(ctx context.Context, ID int) (map[string]string, error) {
+
+	internalServerError := func(err error) (map[string]string, error) {
+		return map[string]string{
+			"en": "Failed ! There's some trouble on our system, please try again",
+			"id": "Gagal ! Terjadi kesalahan pada sistem, silahkan coba lagi",
+		}, err
+	}
+
+	isExists, err := fs.db.Farm.IsFarmExists(ctx, "", ID)
+	if err != nil {
+		fs.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("failed to check farm")
+		return map[string]string{
+			"en": "failed to check farm",
+			"id": "gagal untuk cek farm",
+		}, err
+	}
+
+	if !isExists {
+		fs.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("farm name already exists")
+		return map[string]string{
+			"en": "farm not exists",
+			"id": "farm tidak exists",
+		}, errors.New("farm name already exists")
+	}
+
+	err = fs.db.Farm.DeleteFarm(ctx, ID)
+	if err != nil {
+		fs.log.WithField("request", utils.StructToString(err)).WithError(err).Errorf("failed to delete farm")
+		return internalServerError(err)
+	}
+	return map[string]string{
+		"en": "success",
+		"id": "sukses",
+	}, nil
+
 }
 
 func (fs FarmService) GetFarms(ctx context.Context) ([]farm.Farms, map[string]string, error) {

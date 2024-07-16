@@ -23,8 +23,20 @@ func newFarm(db *infra.DatabaseList, logger *logrus.Logger) FarmConfig {
 
 type Farm interface {
 	InsertFarm(ctx context.Context, tx *sql.Tx, data farm.InsertFarm) error
+	DeleteFarm(ctx context.Context, ID int) error
 	IsFarmExists(ctx context.Context, farmName string, ID int) (bool, error)
 	GetFarms(ctx context.Context) ([]farm.Farms, error)
+}
+
+func (fc FarmConfig) DeleteFarm(ctx context.Context, ID int) error {
+	script := `UPDATE farm set is_deleted = true where id = $1`
+
+	_, err := fc.db.Backend.Write.Exec(script, ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (fc FarmConfig) GetFarms(ctx context.Context) ([]farm.Farms, error) {
@@ -50,7 +62,7 @@ func (fc FarmConfig) IsFarmExists(ctx context.Context, farmName string, ID int) 
 	var isExist bool
 
 	if farmName != "" {
-		script := `select exists(select * from farm where farm_name = $1)`
+		script := `select exists(select * from farm where farm_name = $1 and is_deleted = false)`
 
 		query, args, err := fc.db.Backend.Read.In(script, farmName)
 		if err != nil {
@@ -63,7 +75,7 @@ func (fc FarmConfig) IsFarmExists(ctx context.Context, farmName string, ID int) 
 			return isExist, err
 		}
 	} else if ID != 0 {
-		script := `select exists(select * from farm where id = $1)`
+		script := `select exists(select * from farm where id = $1 and is_deleted = false)`
 
 		query, args, err := fc.db.Backend.Read.In(script, ID)
 		if err != nil {
