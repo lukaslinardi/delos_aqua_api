@@ -31,7 +31,46 @@ func newPondService(db db.Database, conf general.AppService, dbConn *infra.Datab
 
 type Pond interface {
 	InsertPond(ctx context.Context, data pond.InsertPond) (map[string]string, error)
+	DeletePond(ctx context.Context, ID int) (map[string]string, error)
 	GetPonds(ctx context.Context) ([]pond.Ponds, map[string]string, error)
+}
+
+func (ps PondService) DeletePond(ctx context.Context, ID int) (map[string]string, error) {
+
+	internalServerError := func(err error) (map[string]string, error) {
+		return map[string]string{
+			"en": "Failed ! There's some trouble on our system, please try again",
+			"id": "Gagal ! Terjadi kesalahan pada sistem, silahkan coba lagi",
+		}, err
+	}
+
+	isExists, err := ps.db.Pond.IsPondExists(ctx, "", ID)
+	if err != nil {
+		ps.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("failed to check farm")
+		return map[string]string{
+			"en": "failed to check pond",
+			"id": "gagal untuk cek pond",
+		}, err
+	}
+
+	if !isExists {
+		ps.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("farm name already exists")
+		return map[string]string{
+			"en": "pond not exists",
+			"id": "pond tidak exists",
+		}, errors.New("pond not exists")
+	}
+
+	err = ps.db.Pond.DeletePond(ctx, ID)
+	if err != nil {
+		ps.log.WithField("request", utils.StructToString(err)).WithError(err).Errorf("failed to delete farm")
+		return internalServerError(err)
+	}
+	return map[string]string{
+		"en": "success",
+		"id": "sukses",
+	}, nil
+
 }
 
 func (ps PondService) GetPonds(ctx context.Context) ([]pond.Ponds, map[string]string, error) {

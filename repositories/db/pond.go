@@ -23,8 +23,21 @@ func newPond(db *infra.DatabaseList, logger *logrus.Logger) PondConfig {
 
 type Pond interface {
 	InsertPond(ctx context.Context, tx *sql.Tx, data pond.InsertPond) error
+    DeletePond(ctx context.Context, ID int) error
 	IsPondExists(ctx context.Context, pondName string, ID int) (bool, error)
 	GetPonds(ctx context.Context) ([]pond.Ponds, error)
+}
+
+
+func (pc PondConfig) DeletePond(ctx context.Context, ID int) error {
+	script := `UPDATE pond set is_deleted = true where id = $1`
+
+	_, err := pc.db.Backend.Write.Exec(script, ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (pc PondConfig) GetPonds(ctx context.Context) ([]pond.Ponds, error) {
