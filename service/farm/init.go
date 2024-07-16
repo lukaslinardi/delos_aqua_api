@@ -1,10 +1,6 @@
 package farmService
 
 import (
-	// "olin_psef/domain/model/general"
-	// "olin_psef/infra"
-	// "olin_psef/repository"
-
 	"github.com/lukaslinardi/delos_aqua_api/domain/model/general"
 	"github.com/lukaslinardi/delos_aqua_api/infra"
 	repository "github.com/lukaslinardi/delos_aqua_api/repositories"

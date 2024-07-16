@@ -40,14 +40,12 @@ func (ph PublicHandler) AuthValidator(next http.Handler) http.Handler {
 		authorizationID := req.Header.Get("Authorization-ID")
 
 		if authorization == "" {
-			fmt.Println("err1")
 			respData.Message = "Token Not Valid"
 			utils.WriteResponse(res, respData, http.StatusUnauthorized)
 			return
 		}
 
 		if authorizationID == "" {
-			fmt.Println("err2")
 			respData.Message = "Token Not Valid"
 			utils.WriteResponse(res, respData, http.StatusUnauthorized)
 			return
@@ -55,14 +53,15 @@ func (ph PublicHandler) AuthValidator(next http.Handler) http.Handler {
 
 		authUnix, err := utils.StrToInt64(authorizationID)
 		if err != nil {
-			fmt.Println("err3")
 			respData.Message = "Token Not Valid"
 			utils.WriteResponse(res, respData, http.StatusUnauthorized)
 			return
 		}
 
 		authTime := time.Unix(authUnix, 0)
-		if time.Now().UTC().Unix() > (authTime.UTC().Add(cg.Time1Min)).Unix() {
+		currentTime := time.Now().UTC().Unix()
+		expiryTime := (authTime.UTC().Add(cg.Time1Min)).Unix()
+		if currentTime > expiryTime {
 			fmt.Println("err4")
 			respData.Message = "Token Not Valid"
 			utils.WriteResponse(res, respData, http.StatusUnauthorized)

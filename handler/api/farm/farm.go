@@ -33,6 +33,31 @@ func NewFarmHandler(farm farmService.Farm, conf general.AppService, logger *logr
 	}
 }
 
+func (fh FarmHandler) GetFarms(res http.ResponseWriter, req *http.Request) {
+	respData := &utils.ResponseDataV3{
+		Status: cg.Fail,
+	}
+
+	data, message, err := fh.Farm.GetFarms(req.Context())
+	if err != nil {
+		respData.Message = message
+		respData.ErrorDebug = err.Error()
+		respData.ResponseFormatter()
+		utils.WriteResponse(res, respData, http.StatusInternalServerError)
+		return
+	}
+
+	respData = &utils.ResponseDataV3{
+		Status:  cg.Success,
+		Message: message,
+		Detail:  data,
+	}
+
+	utils.WriteResponse(res, respData, http.StatusOK)
+	return
+
+}
+
 func (fh FarmHandler) InsertFarm(res http.ResponseWriter, req *http.Request) {
 	respData := &utils.ResponseDataV3{
 		Status: cg.Fail,
@@ -62,7 +87,7 @@ func (fh FarmHandler) InsertFarm(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	messages, err := fh.Farm.InsertFarm(req.Context(), request) 
+	messages, err := fh.Farm.InsertFarm(req.Context(), request)
 	if err != nil {
 		respData.Message = messages
 		respData.ErrorDebug = err.Error()

@@ -11,6 +11,7 @@ import (
 
 func getV1(router, routerJWT *mux.Router, handler api.Handler) {
 	router.HandleFunc("/v1/farm", handler.Farm.Farm.InsertFarm).Methods(http.MethodPost)
+	router.HandleFunc("/v1/farms", handler.Farm.Farm.GetFarms).Methods(http.MethodGet)
 	// router.HandleFunc("/v1/signup", handler.Auth.Auth.SignUp).Methods(http.MethodPost)
 	// router.HandleFunc("/v1/login", handler.Auth.Auth.Login).Methods(http.MethodPost)
 	// router.HandleFunc("/v1/psef/forget-password", handler.Auth.Auth.ForgetPassword).Methods(http.MethodGet)

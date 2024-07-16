@@ -31,6 +31,28 @@ func newFarmService(db db.Database, conf general.AppService, dbConn *infra.Datab
 
 type Farm interface {
 	InsertFarm(ctx context.Context, data farm.InsertFarm) (map[string]string, error)
+	GetFarms(ctx context.Context) ([]farm.Farms, map[string]string, error)
+}
+
+func (fs FarmService) GetFarms(ctx context.Context) ([]farm.Farms, map[string]string, error) {
+
+	internalServerError := func(err error) ([]farm.Farms, map[string]string, error) {
+		return nil, map[string]string{
+			"en": "Failed ! There's some trouble on our system, please try again",
+			"id": "Gagal ! Terjadi kesalahan pada sistem, silahkan coba lagi",
+		}, err
+	}
+
+	data, err := fs.db.Farm.GetFarms(ctx)
+	if err != nil {
+		fs.log.WithField("request", utils.StructToString(data)).WithError(err).Errorf("Sign Up | Low | fail to begin transaction")
+		return internalServerError(err)
+	}
+
+	return data, map[string]string{
+		"en": "success",
+		"id": "sukses",
+	}, nil
 }
 
 func (fs FarmService) InsertFarm(ctx context.Context, data farm.InsertFarm) (map[string]string, error) {

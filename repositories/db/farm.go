@@ -24,6 +24,26 @@ func newFarm(db *infra.DatabaseList, logger *logrus.Logger) FarmConfig {
 type Farm interface {
 	InsertFarm(ctx context.Context, tx *sql.Tx, data farm.InsertFarm) error
 	IsFarmExists(ctx context.Context, farmName string) (bool, error)
+	GetFarms(ctx context.Context) ([]farm.Farms, error)
+}
+
+func (fc FarmConfig) GetFarms(ctx context.Context) ([]farm.Farms, error) {
+
+	var res []farm.Farms
+
+	script := `select f.id, f.farm_name, f.created_at from farm f`
+
+	query, args, err := fc.db.Backend.Read.In(script)
+	if err != nil {
+		return res, err
+	}
+
+	query = fc.db.Backend.Read.Rebind(query)
+	err = fc.db.Backend.Read.Select(&res, query, args...)
+	if err != nil && err != sql.ErrNoRows {
+		return res, err
+	}
+	return res, nil
 }
 
 func (fc FarmConfig) IsFarmExists(ctx context.Context, farmName string) (bool, error) {
