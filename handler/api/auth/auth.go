@@ -62,7 +62,6 @@ func (ph PublicHandler) AuthValidator(next http.Handler) http.Handler {
 		currentTime := time.Now().UTC().Unix()
 		expiryTime := (authTime.UTC().Add(cg.Time1Min)).Unix()
 		if currentTime > expiryTime {
-			fmt.Println("err4")
 			respData.Message = "Token Not Valid"
 			utils.WriteResponse(res, respData, http.StatusUnauthorized)
 			return
