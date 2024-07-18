@@ -45,9 +45,22 @@ func (ps PondService) GetPond(ctx context.Context, ID int) (*pond.Pond, map[stri
 		}, err
 	}
 
+	isExists, err := ps.db.Pond.IsPondExists(ctx, "", ID)
+	if err != nil {
+		ps.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("failed to get pond detail")
+		return internalServerError(err)
+	}
+
+	if !isExists {
+		return nil, map[string]string{
+			"en": "pond not exists",
+			"id": "pond tidak ada",
+		}, errors.New("pond not exists")
+	}
+
 	data, err := ps.db.Pond.GetPond(ctx, ID)
 	if err != nil {
-		ps.log.WithField("request", utils.StructToString(data)).WithError(err).Errorf("failed to get farm detail")
+		ps.log.WithField("request", utils.StructToString(data)).WithError(err).Errorf("failed to get pond detail")
 		return internalServerError(err)
 	}
 

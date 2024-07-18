@@ -88,7 +88,7 @@ func (pc PondConfig) IsPondExists(ctx context.Context, pondName string, ID int) 
 	var isExist bool
 
 	if pondName != "" {
-		script := `select exists(select * from pond where pond_name = $1)`
+		script := `select exists(select * from pond where pond_name = $1 and is_deleted = false)`
 
 		query, args, err := pc.db.Backend.Read.In(script, pondName)
 		if err != nil {
@@ -101,7 +101,7 @@ func (pc PondConfig) IsPondExists(ctx context.Context, pondName string, ID int) 
 			return isExist, err
 		}
 	} else if ID != 0 {
-		script := `select exists(select * from pond where id = $1)`
+		script := `select exists(select * from pond where id = $1 and is_deleted = false)`
 
 		query, args, err := pc.db.Backend.Read.In(script, ID)
 		if err != nil {
