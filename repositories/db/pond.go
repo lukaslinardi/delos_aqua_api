@@ -27,6 +27,18 @@ type Pond interface {
 	IsPondExists(ctx context.Context, pondName string, ID int) (bool, error)
 	GetPonds(ctx context.Context) ([]pond.Ponds, error)
 	GetPond(ctx context.Context, ID int) (*pond.Pond, error)
+	UpdatePond(ctx context.Context, ID int, pondName string) error
+}
+
+func (pc PondConfig) UpdatePond(ctx context.Context, ID int, pondName string) error {
+	script := `UPDATE pond set pond_name = $1 where id = $2`
+
+	_, err := pc.db.Backend.Write.Exec(script, pondName, ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (pc PondConfig) GetPond(ctx context.Context, ID int) (*pond.Pond, error) {

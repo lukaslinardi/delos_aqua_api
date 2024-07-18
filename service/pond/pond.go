@@ -34,6 +34,42 @@ type Pond interface {
 	DeletePond(ctx context.Context, ID int) (map[string]string, error)
 	GetPonds(ctx context.Context) ([]pond.Ponds, map[string]string, error)
 	GetPond(ctx context.Context, ID int) (*pond.Pond, map[string]string, error)
+	UpdatePond(ctx context.Context, ID int, pondName string) (map[string]string, error)
+}
+
+func (ps PondService) UpdatePond(ctx context.Context, ID int, pondName string) (map[string]string, error) {
+
+	isExists, err := ps.db.Pond.IsPondExists(ctx, pondName, 0)
+	if err != nil {
+		ps.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("failed to check pond")
+		return map[string]string{
+			"en": "Failed ! There's some trouble on our system, please try again",
+			"id": "Gagal ! Terjadi kesalahan pada sistem, silahkan coba lagi",
+		}, errors.New("pond name already exists")
+	}
+
+	if !isExists {
+		ps.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("pond not exists")
+		return map[string]string{
+			"en": "pond name already exists",
+			"id": "pond sudah ada",
+		}, errors.New("pond name already exists")
+	}
+
+	err = ps.db.Pond.UpdatePond(ctx, ID, pondName)
+	if err != nil {
+		ps.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("farm not exists")
+		return map[string]string{
+			"en": "Failed ! There's some trouble on our system, please try again",
+			"id": "Gagal ! Terjadi kesalahan pada sistem, silahkan coba lagi",
+		}, err
+	}
+
+	return map[string]string{
+		"en": "success",
+		"id": "sukses",
+	}, nil
+
 }
 
 func (ps PondService) GetPond(ctx context.Context, ID int) (*pond.Pond, map[string]string, error) {

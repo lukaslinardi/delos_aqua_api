@@ -40,7 +40,7 @@ type Farm interface {
 
 func (fs FarmService) UpdateFarm(ctx context.Context, ID int, farmName string) (map[string]string, error) {
 
-	isExists, err := fs.db.Farm.IsFarmExists(ctx, "", ID)
+	isExists, err := fs.db.Farm.IsFarmExists(ctx, farmName, 0)
 	if err != nil {
 		fs.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("failed to check farm")
 		return map[string]string{
@@ -49,12 +49,12 @@ func (fs FarmService) UpdateFarm(ctx context.Context, ID int, farmName string) (
 		}, errors.New("farm name already exists")
 	}
 
-	if !isExists {
-		fs.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("farm not exists")
+	if isExists {
+		fs.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("farm already exists")
 		return map[string]string{
-			"en": "farm not exists",
-			"id": "farm tidak ada",
-		}, errors.New("farm not exists")
+			"en": "farm already exists",
+			"id": "farm sudah ada",
+		}, errors.New("farm already exists")
 	}
 
 	err = fs.db.Farm.UpdateFarm(ctx, ID, farmName)
