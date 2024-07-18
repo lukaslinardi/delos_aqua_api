@@ -48,6 +48,24 @@ func (fs FarmService) GetFarm(ctx context.Context, ID int) (*farm.FarmRes, map[s
 		}, err
 	}
 
+    isExists, err := fs.db.Farm.IsFarmExists(ctx, "", ID)
+    if err != nil {
+		fs.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("failed to check farm")
+		return nil, map[string]string{
+			"en": "Failed ! There's some trouble on our system, please try again",
+			"id": "Gagal ! Terjadi kesalahan pada sistem, silahkan coba lagi",
+		}, errors.New("farm name already exists")
+    }
+
+
+    if !isExists {
+		fs.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("farm not exists")
+		return nil, map[string]string{
+			"en": "farm not exists",
+			"id": "farm tidak ada",
+		}, errors.New("farm not exists")
+    }
+
 	data, err := fs.db.Farm.GetFarm(ctx, ID)
 	if err != nil {
 		fs.log.WithField("request", utils.StructToString(data)).WithError(err).Errorf("failed to get farm detail")
