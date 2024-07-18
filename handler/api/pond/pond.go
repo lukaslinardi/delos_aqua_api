@@ -1,11 +1,10 @@
 package pondHandler
 
-
 import (
-
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	cg "github.com/lukaslinardi/delos_aqua_api/domain/constants/general"
 	pd "github.com/lukaslinardi/delos_aqua_api/domain/model/pond"
@@ -16,7 +15,6 @@ import (
 
 	pondService "github.com/lukaslinardi/delos_aqua_api/service/pond"
 )
-
 
 type PondHandler struct {
 	Pond pondService.Pond
@@ -32,6 +30,45 @@ func NewPondHandler(pond pondService.Pond, conf general.AppService, logger *logr
 	}
 }
 
+func (ph PondHandler) DeletePond(res http.ResponseWriter, req *http.Request) {
+
+	respData := &utils.ResponseDataV3{
+		Status: cg.Fail,
+	}
+
+	ID := req.URL.Query().Get("ID")
+
+	id, err := strconv.Atoi(ID)
+	if err != nil {
+		respData := &utils.ResponseDataV3{
+			Status: cg.Fail,
+			Message: map[string]string{
+				"en": cg.HandlerErrorRequestDataNotValid,
+				"id": cg.HandlerErrorRequestDataNotValidID,
+			},
+		}
+		utils.WriteResponse(res, respData, http.StatusBadRequest)
+		return
+	}
+
+	message, err := ph.Pond.DeletePond(req.Context(), id)
+	if err != nil {
+		respData := &utils.ResponseDataV3{
+			Status:  cg.Fail,
+			Message: message,
+		}
+		utils.WriteResponse(res, respData, http.StatusBadRequest)
+		return
+	}
+
+	respData = &utils.ResponseDataV3{
+		Status:  cg.Success,
+		Message: message,
+	}
+
+	utils.WriteResponse(res, respData, http.StatusOK)
+	return
+}
 
 func (ph PondHandler) GetPonds(res http.ResponseWriter, req *http.Request) {
 	respData := &utils.ResponseDataV3{
@@ -46,7 +83,6 @@ func (ph PondHandler) GetPonds(res http.ResponseWriter, req *http.Request) {
 		utils.WriteResponse(res, respData, http.StatusInternalServerError)
 		return
 	}
-
 
 	if len(data) == 0 {
 		respData = &utils.ResponseDataV3{
@@ -70,7 +106,6 @@ func (ph PondHandler) GetPonds(res http.ResponseWriter, req *http.Request) {
 	return
 
 }
-
 
 func (ph PondHandler) InsertPond(res http.ResponseWriter, req *http.Request) {
 	respData := &utils.ResponseDataV3{
