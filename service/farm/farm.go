@@ -35,6 +35,41 @@ type Farm interface {
 	GetFarms(ctx context.Context) ([]farm.Farms, map[string]string, error)
 	DeleteFarm(ctx context.Context, ID int) (map[string]string, error)
 	GetFarm(ctx context.Context, ID int) (*farm.FarmRes, map[string]string, error)
+	UpdateFarm(ctx context.Context, ID int, farmName string) (map[string]string, error)
+}
+
+func (fs FarmService) UpdateFarm(ctx context.Context, ID int, farmName string) (map[string]string, error) {
+
+	isExists, err := fs.db.Farm.IsFarmExists(ctx, "", ID)
+	if err != nil {
+		fs.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("failed to check farm")
+		return map[string]string{
+			"en": "Failed ! There's some trouble on our system, please try again",
+			"id": "Gagal ! Terjadi kesalahan pada sistem, silahkan coba lagi",
+		}, errors.New("farm name already exists")
+	}
+
+	if !isExists {
+		fs.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("farm not exists")
+		return map[string]string{
+			"en": "farm not exists",
+			"id": "farm tidak ada",
+		}, errors.New("farm not exists")
+	}
+
+	err = fs.db.Farm.UpdateFarm(ctx, ID, farmName)
+	if err != nil {
+		fs.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("farm not exists")
+		return map[string]string{
+			"en": "Failed ! There's some trouble on our system, please try again",
+			"id": "Gagal ! Terjadi kesalahan pada sistem, silahkan coba lagi",
+		}, err
+	}
+
+	return map[string]string{
+		"en": "success",
+		"id": "sukses",
+	}, nil
 }
 
 func (fs FarmService) GetFarm(ctx context.Context, ID int) (*farm.FarmRes, map[string]string, error) {
@@ -48,23 +83,22 @@ func (fs FarmService) GetFarm(ctx context.Context, ID int) (*farm.FarmRes, map[s
 		}, err
 	}
 
-    isExists, err := fs.db.Farm.IsFarmExists(ctx, "", ID)
-    if err != nil {
+	isExists, err := fs.db.Farm.IsFarmExists(ctx, "", ID)
+	if err != nil {
 		fs.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("failed to check farm")
 		return nil, map[string]string{
 			"en": "Failed ! There's some trouble on our system, please try again",
 			"id": "Gagal ! Terjadi kesalahan pada sistem, silahkan coba lagi",
 		}, errors.New("farm name already exists")
-    }
+	}
 
-
-    if !isExists {
+	if !isExists {
 		fs.log.WithField("request", utils.StructToString(isExists)).WithError(err).Errorf("farm not exists")
 		return nil, map[string]string{
 			"en": "farm not exists",
 			"id": "farm tidak ada",
 		}, errors.New("farm not exists")
-    }
+	}
 
 	data, err := fs.db.Farm.GetFarm(ctx, ID)
 	if err != nil {

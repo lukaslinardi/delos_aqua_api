@@ -27,6 +27,19 @@ type Farm interface {
 	IsFarmExists(ctx context.Context, farmName string, ID int) (bool, error)
 	GetFarms(ctx context.Context) ([]farm.Farms, error)
 	GetFarm(ctx context.Context, ID int) ([]farm.Farm, error)
+	UpdateFarm(ctx context.Context, ID int, farmName string) error
+}
+
+func (fc FarmConfig) UpdateFarm(ctx context.Context, ID int, farmName string) error {
+
+	script := `UPDATE farm set farm_name = $1 where id = $2`
+
+	_, err := fc.db.Backend.Write.Exec(script, farmName, ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (fc FarmConfig) GetFarm(ctx context.Context, ID int) ([]farm.Farm, error) {

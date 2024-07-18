@@ -30,6 +30,47 @@ func NewFarmHandler(farm farmService.Farm, conf general.AppService, logger *logr
 	}
 }
 
+func (fh FarmHandler) UpdateFarm(res http.ResponseWriter, req *http.Request) {
+
+	respData := &utils.ResponseDataV3{
+		Status: cg.Fail,
+	}
+
+	ID := req.URL.Query().Get("ID")
+	farmName := req.URL.Query().Get("farm_name")
+
+	id, err := strconv.Atoi(ID)
+	if err != nil {
+		respData := &utils.ResponseDataV3{
+			Status: cg.Fail,
+			Message: map[string]string{
+				"en": cg.HandlerErrorRequestDataNotValid,
+				"id": cg.HandlerErrorRequestDataNotValidID,
+			},
+		}
+		utils.WriteResponse(res, respData, http.StatusBadRequest)
+		return
+	}
+
+	message, err := fh.Farm.UpdateFarm(req.Context(), id, farmName)
+	if err != nil {
+		respData := &utils.ResponseDataV3{
+			Status:  cg.Fail,
+			Message: message,
+		}
+		utils.WriteResponse(res, respData, http.StatusBadRequest)
+		return
+	}
+
+	respData = &utils.ResponseDataV3{
+		Status:  cg.Success,
+		Message: message,
+	}
+
+	utils.WriteResponse(res, respData, http.StatusOK)
+	return
+}
+
 func (fh FarmHandler) GetFarm(res http.ResponseWriter, req *http.Request) {
 	respData := &utils.ResponseDataV3{
 		Status: cg.Fail,
