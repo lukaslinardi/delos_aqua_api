@@ -33,6 +33,28 @@ type Pond interface {
 	InsertPond(ctx context.Context, data pond.InsertPond) (map[string]string, error)
 	DeletePond(ctx context.Context, ID int) (map[string]string, error)
 	GetPonds(ctx context.Context) ([]pond.Ponds, map[string]string, error)
+	GetPond(ctx context.Context, ID int) (*pond.Pond, map[string]string, error)
+}
+
+func (ps PondService) GetPond(ctx context.Context, ID int) (*pond.Pond, map[string]string, error) {
+
+	internalServerError := func(err error) (*pond.Pond, map[string]string, error) {
+		return nil, map[string]string{
+			"en": "Failed ! There's some trouble on our system, please try again",
+			"id": "Gagal ! Terjadi kesalahan pada sistem, silahkan coba lagi",
+		}, err
+	}
+
+	data, err := ps.db.Pond.GetPond(ctx, ID)
+	if err != nil {
+		ps.log.WithField("request", utils.StructToString(data)).WithError(err).Errorf("failed to get farm detail")
+		return internalServerError(err)
+	}
+
+	return data, map[string]string{
+		"en": "success",
+		"id": "sukses",
+	}, nil
 }
 
 func (ps PondService) DeletePond(ctx context.Context, ID int) (map[string]string, error) {

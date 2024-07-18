@@ -30,6 +30,43 @@ func NewPondHandler(pond pondService.Pond, conf general.AppService, logger *logr
 	}
 }
 
+func (ph PondHandler) GetPond(res http.ResponseWriter, req *http.Request) {
+
+	respData := &utils.ResponseDataV3{
+		Status: cg.Fail,
+	}
+
+	ID, err := strconv.Atoi(req.URL.Query().Get("id"))
+	if err != nil {
+		respData = &utils.ResponseDataV3{
+			Status: cg.Fail,
+			Message: map[string]string{
+				"en": cg.HandlerErrorRequestDataNotValid,
+				"id": cg.HandlerErrorRequestDataNotValidID,
+			},
+		}
+		utils.WriteResponse(res, respData, http.StatusBadRequest)
+		return
+	}
+
+	data, message, err := ph.Pond.GetPond(req.Context(), ID)
+	if err != nil {
+		respData.Message = message
+		utils.WriteResponse(res, respData, http.StatusInternalServerError)
+		return
+	}
+
+	respData = &utils.ResponseDataV3{
+		Status:  cg.Success,
+		Message: message,
+		Detail:  data,
+	}
+
+	utils.WriteResponse(res, respData, http.StatusOK)
+	return
+
+}
+
 func (ph PondHandler) DeletePond(res http.ResponseWriter, req *http.Request) {
 
 	respData := &utils.ResponseDataV3{
