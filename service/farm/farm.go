@@ -7,6 +7,7 @@ import (
 
 	"github.com/lukaslinardi/delos_aqua_api/domain/model/farm"
 	"github.com/lukaslinardi/delos_aqua_api/domain/model/general"
+	"github.com/lukaslinardi/delos_aqua_api/domain/model/pond"
 	"github.com/lukaslinardi/delos_aqua_api/domain/utils"
 	"github.com/lukaslinardi/delos_aqua_api/infra"
 	"github.com/lukaslinardi/delos_aqua_api/repositories/db"
@@ -33,6 +34,41 @@ type Farm interface {
 	InsertFarm(ctx context.Context, data farm.InsertFarm) (map[string]string, error)
 	GetFarms(ctx context.Context) ([]farm.Farms, map[string]string, error)
 	DeleteFarm(ctx context.Context, ID int) (map[string]string, error)
+	GetFarm(ctx context.Context, ID int) (*farm.FarmRes, map[string]string, error)
+}
+
+func (fs FarmService) GetFarm(ctx context.Context, ID int) (*farm.FarmRes, map[string]string, error) {
+
+	var res farm.FarmRes
+
+	internalServerError := func(err error) (*farm.FarmRes, map[string]string, error) {
+		return nil, map[string]string{
+			"en": "Failed ! There's some trouble on our system, please try again",
+			"id": "Gagal ! Terjadi kesalahan pada sistem, silahkan coba lagi",
+		}, err
+	}
+
+	data, err := fs.db.Farm.GetFarm(ctx, ID)
+	if err != nil {
+		fs.log.WithField("request", utils.StructToString(data)).WithError(err).Errorf("failed to get farm detail")
+		return internalServerError(err)
+	}
+
+	for _, value := range data {
+		res.Ponds = append(res.Ponds, pond.Ponds{
+			ID:        value.PondID,
+			FarmID:    value.ID,
+			PondName:  value.PondName,
+			CreatedAt: value.CreatedAt,
+		})
+		res.ID = value.ID
+		res.FarmName = value.FarmName
+	}
+
+	return &res, map[string]string{
+		"en": "success",
+		"id": "sukses",
+	}, nil
 }
 
 func (fs FarmService) DeleteFarm(ctx context.Context, ID int) (map[string]string, error) {

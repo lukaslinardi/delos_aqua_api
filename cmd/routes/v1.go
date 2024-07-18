@@ -13,6 +13,7 @@ func getV1(router, routerJWT *mux.Router, handler api.Handler) {
 	router.HandleFunc("/v1/farm", handler.Farm.Farm.InsertFarm).Methods(http.MethodPost)
 	router.HandleFunc("/v1/farms", handler.Farm.Farm.GetFarms).Methods(http.MethodGet)
 	router.HandleFunc("/v1/delete-farm", handler.Farm.Farm.DeleteFarm).Methods(http.MethodDelete)
+	router.HandleFunc("/v1/farm", handler.Farm.Farm.GetFarm).Methods(http.MethodGet)
 
 	router.HandleFunc("/v1/pond", handler.Pond.Pond.InsertPond).Methods(http.MethodPost)
 	router.HandleFunc("/v1/ponds", handler.Pond.Pond.GetPonds).Methods(http.MethodGet)

@@ -26,6 +26,35 @@ type Farm interface {
 	DeleteFarm(ctx context.Context, ID int) error
 	IsFarmExists(ctx context.Context, farmName string, ID int) (bool, error)
 	GetFarms(ctx context.Context) ([]farm.Farms, error)
+	GetFarm(ctx context.Context, ID int) ([]farm.Farm, error)
+}
+
+func (fc FarmConfig) GetFarm(ctx context.Context, ID int) ([]farm.Farm, error) {
+
+	var res []farm.Farm
+
+	script := `select 
+	f.id, 
+    p.id as pond_id,
+	f.farm_name,
+	p.pond_name,
+    p.created_at
+	from farm f 
+	inner join pond p on p.farm_id = f.id
+	where p.is_deleted = false and f.is_deleted = false and f.id = $1`
+
+	query, args, err := fc.db.Backend.Read.In(script, ID)
+	if err != nil {
+		return nil, err
+	}
+
+	query = fc.db.Backend.Read.Rebind(query)
+	err = fc.db.Backend.Read.Select(&res, query, args...)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (fc FarmConfig) DeleteFarm(ctx context.Context, ID int) error {
